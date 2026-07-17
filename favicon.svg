@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Wiki Arcana">
+  <rect width="64" height="64" rx="14" fill="#0f172a"/>
+  <path d="M32 8 52 18v28L32 56 12 46V18L32 8Z" fill="#7c3aed" fill-opacity=".25" stroke="#a78bfa" stroke-width="3"/>
+  <path d="m21 23 11-6 11 6v18l-11 6-11-6V23Zm0 0 11 7 11-7M32 30v17" fill="none" stroke="#f8fafc" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/>
+</svg>

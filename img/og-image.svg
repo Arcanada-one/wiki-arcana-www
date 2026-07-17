@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Wiki Arcana</title>
+  <desc id="desc">Wiki Arcana coming soon</desc>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="20%" r="80%"><stop offset="0" stop-color="#6d28d9"/><stop offset="1" stop-color="#020617"/></radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g transform="translate(132 155)" fill="none" stroke="#c4b5fd" stroke-linecap="round" stroke-linejoin="round" stroke-width="12">
+    <path d="m110 0 100 50v140l-100 50L10 190V50L110 0Z" fill="#7c3aed" fill-opacity=".2"/>
+    <path d="m55 78 55-32 55 32v84l-55 32-55-32V78Zm0 0 55 34 55-34m-55 34v82"/>
+  </g>
+  <text x="430" y="286" fill="#f8fafc" font-family="system-ui, sans-serif" font-size="82" font-weight="750">Wiki Arcana</text>
+  <text x="435" y="356" fill="#c4b5fd" font-family="system-ui, sans-serif" font-size="34" font-weight="600" letter-spacing="8">COMING SOON</text>
+</svg>

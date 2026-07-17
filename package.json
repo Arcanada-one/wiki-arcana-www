@@ -1,0 +1,12 @@
+{
+  "name": "wiki-arcana-www",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Tailwind CSS build for arcanada.wiki",
+  "scripts": {
+    "build:css": "tailwindcss -i src/input.css -o css/tw.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
