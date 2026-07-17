@@ -1,0 +1,177 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  fork-policy:
+    name: fork-policy
+    runs-on: [self-hosted, linux, arcana-prod]
+    steps:
+      - name: Reject untrusted fork execution on self-hosted infrastructure
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+        run: |
+          echo 'Fork pull requests require a maintainer-owned branch before CI can execute.' >&2
+          exit 1
+      - name: Accept trusted event
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+        run: echo 'trusted event'
+
+  policy:
+    name: policy-and-manifests
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    needs: [fork-policy]
+    runs-on: [self-hosted, linux, arcana-prod]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: Arcanada-one/datarim
+          ref: 0ba3bd641a50f95dae110fa3f1d60d2ae062b723
+          path: .datarim
+          persist-credentials: false
+      - name: Validate public manifests and accepted-risk schema
+        run: |
+          set -euo pipefail
+          for path in SECURITY.md accepted-risk.yml README.md CHANGELOG.md LICENSE; do test -f "$path"; done
+          for category in tutorials how-to reference explanation; do test -d "docs/$category"; done
+          .datarim/dev-tools/check-security-policy.sh --validate-yaml accepted-risk.yml
+      - name: Reject internal task identifiers and private host data
+        run: |
+          set -euo pipefail
+          if git grep -nE '\bWIKI-[0-9]{4}\b'; then exit 1; fi
+          if git grep -nE '100\.(7[0-9]|8[0-9]|9[0-9]|10[0-9]|11[0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}'; then exit 1; fi
+
+  secret-scan:
+    name: gitleaks
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    needs: [fork-policy]
+    runs-on: [self-hosted, linux, arcana-prod]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  site-tests:
+    name: php-content-links-responsive
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    needs: [fork-policy]
+    runs-on: [self-hosted, linux, arcana-prod]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - run: php tests/run.php
+      - name: PHP syntax gate
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do php -l "$file" >/dev/null; done < <(find . -type f -name '*.php' -print)
+      - run: shellcheck -S warning ops/*.sh
+      - name: OSV dependency scan
+        run: |
+          set -euo pipefail
+          scanner="$RUNNER_TEMP/osv-scanner"
+          curl -fsSL https://github.com/google/osv-scanner/releases/download/v2.3.8/osv-scanner_linux_amd64 -o "$scanner"
+          echo 'bc98e15319ed0d515e3f9235287ba53cdc5535d576d24fd573978ecfe9ab92dc  '"$scanner" | sha256sum --check --strict
+          chmod +x "$scanner"
+          "$scanner" scan source -r .
+
+  workflow-security:
+    name: actionlint-zizmor
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    needs: [fork-policy]
+    runs-on: [self-hosted, linux, arcana-prod]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Run checksum-pinned actionlint
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/actionlint.tar.gz"
+          curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.8/actionlint_1.7.8_linux_amd64.tar.gz -o "$archive"
+          echo 'be92c2652ab7b6d08425428797ceabeb16e31a781c07bc388456b4e592f3e36a  '"$archive" | sha256sum --check --strict
+          tar -xzf "$archive" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -config-file .github/actionlint.yaml
+      - uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02 # v0.6.0
+        with:
+          version: 1.27.0
+          online-audits: false
+          persona: auditor
+          min-severity: high
+          advanced-security: false
+          annotations: true
+
+  network-exposure:
+    name: network-exposure
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    needs: [fork-policy]
+    runs-on: [self-hosted, linux, arcana-prod]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Validate public nginx exposure declaration
+        run: |
+          set -euo pipefail
+          grep -q '^# x-exposure-justification:' ops/nginx/arcanada.wiki.conf
+          grep -q '^# x-exposure-expires: 2026-10-14$' ops/nginx/arcanada.wiki.conf
+          ! git grep -nE 'server_name +[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' -- ops/nginx
+
+  release-candidate:
+    name: signed-release-candidate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [policy, secret-scan, site-tests, workflow-security, network-exposure]
+    runs-on: [self-hosted, linux, arcana-prod]
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Build immutable site artifact
+        run: |
+          set -euo pipefail
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner \
+            -czf "wiki-arcana-www-${GITHUB_SHA}.tar.gz" index.php config.php content templates css robots.txt sitemap.xml
+          sha256sum "wiki-arcana-www-${GITHUB_SHA}.tar.gz" > "wiki-arcana-www-${GITHUB_SHA}.sha256"
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: wiki-arcana-www-${{ github.sha }}.cdx.json
+          upload-artifact: false
+      - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3
+      - name: Keyless-sign and verify release candidate
+        run: |
+          set -euo pipefail
+          artifact="wiki-arcana-www-${GITHUB_SHA}.tar.gz"
+          cosign sign-blob --yes --bundle "${artifact}.sigstore.json" "$artifact"
+          cosign verify-blob --bundle "${artifact}.sigstore.json" \
+            --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY}/.github/workflows/ci.yml@refs/heads/main$" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com "$artifact"
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: wiki-arcana-www-${{ github.sha }}.tar.gz
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: wiki-arcana-www-${{ github.sha }}
+          path: |
+            wiki-arcana-www-${{ github.sha }}.tar.gz
+            wiki-arcana-www-${{ github.sha }}.sha256
+            wiki-arcana-www-${{ github.sha }}.cdx.json
+            wiki-arcana-www-${{ github.sha }}.tar.gz.sigstore.json
+          if-no-files-found: error
+          retention-days: 14
