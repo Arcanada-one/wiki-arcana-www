@@ -6,7 +6,7 @@ on:
 
 jobs:
   call:
-    uses: Arcanada-one/shared-workflows/.github/workflows/deploy-static-site.yml@v1
+    uses: Arcanada-one/shared-workflows/.github/workflows/deploy-static-site.yml@ee149c1505a2c0fe21d0ae9d48cf82c7d885c9b9 # v1
     with:
       domain: arcanada.wiki
       webroot: arcanada.wiki
