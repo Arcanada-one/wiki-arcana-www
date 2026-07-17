@@ -58,9 +58,15 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Free gitleaks CLI via the official Docker image — the gitleaks-action
+      # requires a paid GITLEAKS_LICENSE for org repos (breaking change), which
+      # the ecosystem does not provision. The CLI performs the same scan with no
+      # license gate. Pinned to a released tag; scans full history (checkout
+      # fetch-depth: 0 above).
+      - name: gitleaks (CLI, no license)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            detect --source=/repo --redact --verbose --no-banner
 
   site-tests:
     name: php-content-links-responsive
