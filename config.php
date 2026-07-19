@@ -6,7 +6,7 @@ return [
     'site_name'   => 'Wiki Arcana',
     'site_url'    => 'https://arcanada.wiki',
     'description' => 'Wiki Arcana is coming soon. No knowledge content is published yet.',
-    'version'     => '1',
+    'version'     => '2',
 
     'ga_id' => '', // Set the site-specific GA4 Measurement ID before enabling analytics.
 
