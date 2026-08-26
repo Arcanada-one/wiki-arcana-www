@@ -116,7 +116,9 @@ jobs:
           curl -fsSL https://github.com/zizmorcore/zizmor/releases/download/v1.27.0/zizmor-x86_64-unknown-linux-gnu.tar.gz -o "$archive"
           echo '277f2bd8fd37cf60c42ab7afca6faa884e65440fa31e02b44bdaae60f62a358f  '"$archive" | sha256sum --check --strict
           tar -xzf "$archive" -C "$RUNNER_TEMP" zizmor
-          "$RUNNER_TEMP/zizmor" --no-online-audits --persona auditor --min-severity high --no-progress --color never .
+          chmod +x "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor" --version | grep -Fx 'zizmor 1.27.0'
+          "$RUNNER_TEMP/zizmor" --offline --persona=auditor --format=github --collect=default --min-severity=high --color=always -- .
 
   network-exposure:
     name: network-exposure
