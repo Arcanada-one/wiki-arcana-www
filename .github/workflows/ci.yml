@@ -109,14 +109,14 @@ jobs:
           echo 'be92c2652ab7b6d08425428797ceabeb16e31a781c07bc388456b4e592f3e36a  '"$archive" | sha256sum --check --strict
           tar -xzf "$archive" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -config-file .github/actionlint.yaml
-      - uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02 # v0.6.0
-        with:
-          version: 1.27.0
-          online-audits: false
-          persona: auditor
-          min-severity: high
-          advanced-security: false
-          annotations: true
+      - name: Run checksum-pinned zizmor
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/zizmor.tar.gz"
+          curl -fsSL https://github.com/zizmorcore/zizmor/releases/download/v1.27.0/zizmor-x86_64-unknown-linux-gnu.tar.gz -o "$archive"
+          echo '277f2bd8fd37cf60c42ab7afca6faa884e65440fa31e02b44bdaae60f62a358f  '"$archive" | sha256sum --check --strict
+          tar -xzf "$archive" -C "$RUNNER_TEMP" zizmor
+          "$RUNNER_TEMP/zizmor" --no-online-audits --persona auditor --min-severity high --no-progress --color never .
 
   network-exposure:
     name: network-exposure
