@@ -36,10 +36,10 @@ jobs:
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           persist-credentials: false
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           repository: Arcanada-one/datarim
           ref: 0ba3bd641a50f95dae110fa3f1d60d2ae062b723
@@ -63,7 +63,7 @@ jobs:
     needs: [fork-policy]
     runs-on: [self-hosted, linux, ci-general]
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -83,7 +83,7 @@ jobs:
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           persist-credentials: false
       - run: php tests/run.php
@@ -107,7 +107,7 @@ jobs:
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           persist-credentials: false
       - name: Run checksum-pinned actionlint
@@ -135,7 +135,7 @@ jobs:
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           persist-credentials: false
       - name: Validate public nginx exposure declaration
@@ -155,7 +155,7 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           persist-credentials: false
       - name: Build immutable site artifact
