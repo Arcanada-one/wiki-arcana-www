@@ -19,6 +19,8 @@ concurrency:
 jobs:
   fork-policy:
     name: fork-policy
+    # Job-level full_name guard (coworker/output-guard pattern): do not schedule on fork PRs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
       - name: Reject untrusted fork execution on self-hosted infrastructure
@@ -32,7 +34,7 @@ jobs:
 
   policy:
     name: policy-and-manifests
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
@@ -59,7 +61,7 @@ jobs:
 
   secret-scan:
     name: gitleaks
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: [fork-policy]
     runs-on: [self-hosted, linux, ci-general]
     steps:
@@ -79,7 +81,7 @@ jobs:
 
   site-tests:
     name: php-content-links-responsive
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
@@ -103,7 +105,7 @@ jobs:
 
   workflow-security:
     name: actionlint-zizmor
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
@@ -131,7 +133,7 @@ jobs:
 
   network-exposure:
     name: network-exposure
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
+    if: (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false) && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     needs: [fork-policy]
     runs-on: [self-hosted, linux, arcana-prod]
     steps:
