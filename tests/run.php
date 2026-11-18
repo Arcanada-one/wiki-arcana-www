@@ -153,6 +153,14 @@ check(!preg_match('/password|local login|basic auth/i', $publicText), 'local aut
 check(!preg_match('/\b(?:WIKI|AUTH|ARCA|INFRA|TUNE)-\d{4}\b/', $publicText), 'internal task identifier detected');
 check(!preg_match('/100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}/', $publicText), 'private mesh address detected');
 
+// OSV gate must not hide an unfixed GHSA without an explicit ignore (wiki-arcana-www#33).
+$osvConfig = source("$root/osv-scanner.toml");
+$ciWorkflow = source("$root/.github/workflows/ci.yml");
+check($osvConfig !== '', 'osv-scanner.toml must exist for the dependency scan gate');
+check(str_contains($osvConfig, 'GHSA-fc5q-39xc-vjpf'), 'osv-scanner.toml must name GHSA-fc5q-39xc-vjpf');
+check(str_contains($osvConfig, 'IgnoredVulns'), 'osv-scanner.toml must use IgnoredVulns');
+check(str_contains($ciWorkflow, 'scan source -r . --config osv-scanner.toml'), 'CI OSV step must pass --config osv-scanner.toml');
+
 if ($failures !== []) {
     fwrite(STDERR, implode("\n", $failures) . "\n");
     exit(1);

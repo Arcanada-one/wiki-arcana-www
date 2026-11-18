@@ -1,0 +1,7 @@
+# Explicit ignore until micromatch/picomatch ships a fix beyond 4.0.7.
+# GHSA-fc5q-39xc-vjpf / CVE-2026-112366 — ReDoS; all versions through 4.0.7 affected.
+# picomatch here is a Tailwind CSS (devDependency) transitive only; not shipped to production PHP pages.
+# Recheck when npm view picomatch version reports >4.0.7 with an OSV fixed range.
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+reason = "No fixed version published (picomatch through 4.0.7 all affected). DevDependency transitive via Tailwind only. Recheck when picomatch > 4.0.7 ships a fix."
