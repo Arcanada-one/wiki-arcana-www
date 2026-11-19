@@ -153,13 +153,16 @@ check(!preg_match('/password|local login|basic auth/i', $publicText), 'local aut
 check(!preg_match('/\b(?:WIKI|AUTH|ARCA|INFRA|TUNE)-\d{4}\b/', $publicText), 'internal task identifier detected');
 check(!preg_match('/100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}/', $publicText), 'private mesh address detected');
 
-// OSV gate must not hide an unfixed GHSA without an explicit ignore (wiki-arcana-www#33).
-$osvConfig = source("$root/osv-scanner.toml");
+// Dependency gate: no OSV ignore/waiver; picomatch 4.x pinned to latest published 4.0.7 (wiki-arcana-www#33).
 $ciWorkflow = source("$root/.github/workflows/ci.yml");
-check($osvConfig !== '', 'osv-scanner.toml must exist for the dependency scan gate');
-check(str_contains($osvConfig, 'GHSA-fc5q-39xc-vjpf'), 'osv-scanner.toml must name GHSA-fc5q-39xc-vjpf');
-check(str_contains($osvConfig, 'IgnoredVulns'), 'osv-scanner.toml must use IgnoredVulns');
-check(str_contains($ciWorkflow, 'scan source -r . --config osv-scanner.toml'), 'CI OSV step must pass --config osv-scanner.toml');
+$packageJson = source("$root/package.json");
+$lockfile = source("$root/package-lock.json");
+check(!is_file("$root/osv-scanner.toml"), 'osv-scanner.toml ignore/waiver must not exist');
+check(str_contains($ciWorkflow, '"$scanner" scan source -r .'), 'CI OSV step must scan without --config ignore');
+check(!str_contains($ciWorkflow, '--config osv-scanner.toml'), 'CI OSV step must not pass an ignore config');
+check(str_contains($packageJson, '"picomatch@>=4.0.0 <4.0.7": "4.0.7"'), 'package.json must override picomatch 4.x to 4.0.7');
+check(!str_contains($lockfile, 'picomatch-4.0.5.tgz'), 'package-lock must not resolve nested picomatch 4.0.5');
+check(str_contains($lockfile, 'picomatch-4.0.7.tgz') || str_contains($lockfile, 'picomatch-2.3.'), 'package-lock must resolve picomatch after override');
 
 if ($failures !== []) {
     fwrite(STDERR, implode("\n", $failures) . "\n");
