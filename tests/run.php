@@ -153,6 +153,17 @@ check(!preg_match('/password|local login|basic auth/i', $publicText), 'local aut
 check(!preg_match('/\b(?:WIKI|AUTH|ARCA|INFRA|TUNE)-\d{4}\b/', $publicText), 'internal task identifier detected');
 check(!preg_match('/100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.\d{1,3}\.\d{1,3}/', $publicText), 'private mesh address detected');
 
+// Dependency gate: no OSV ignore/waiver; picomatch 4.x pinned to latest published 4.0.7 (wiki-arcana-www#33).
+$ciWorkflow = source("$root/.github/workflows/ci.yml");
+$packageJson = source("$root/package.json");
+$lockfile = source("$root/package-lock.json");
+check(!is_file("$root/osv-scanner.toml"), 'osv-scanner.toml ignore/waiver must not exist');
+check(str_contains($ciWorkflow, '"$scanner" scan source -r .'), 'CI OSV step must scan without --config ignore');
+check(!str_contains($ciWorkflow, '--config osv-scanner.toml'), 'CI OSV step must not pass an ignore config');
+check(str_contains($packageJson, '"picomatch@>=4.0.0 <4.0.7": "4.0.7"'), 'package.json must override picomatch 4.x to 4.0.7');
+check(!str_contains($lockfile, 'picomatch-4.0.5.tgz'), 'package-lock must not resolve nested picomatch 4.0.5');
+check(str_contains($lockfile, 'picomatch-4.0.7.tgz') || str_contains($lockfile, 'picomatch-2.3.'), 'package-lock must resolve picomatch after override');
+
 if ($failures !== []) {
     fwrite(STDERR, implode("\n", $failures) . "\n");
     exit(1);
