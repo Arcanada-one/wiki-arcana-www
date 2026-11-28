@@ -6,10 +6,14 @@ on:
 
 jobs:
   call:
-    uses: Arcanada-one/shared-workflows/.github/workflows/deploy-static-site.yml@61088e2e2a101deba6edbe674d010a42f9b4c234 # v1
+    uses: Arcanada-one/shared-workflows/.github/workflows/deploy-static-site.yml@5527b0a485bc243ebdd704c3244b98428f162a81 # v1
     with:
       domain: arcanada.wiki
       webroot: arcanada.wiki
+      # publish_dir is the repository root without .gitignore: the guard refuses dot-named entries.
+      build: rm -rf dist && mkdir -p dist && rsync -a --exclude='.git/' --exclude='.github/' --exclude='.shared-workflows/' --exclude='.gitignore' --exclude='node_modules/' --exclude='dist/' ./ dist/
+      publish_dir: dist
     secrets:
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
       OPSBOT_URL: ${{ secrets.OPSBOT_URL }}
       OPSBOT_KEY: ${{ secrets.OPSBOT_KEY }}
